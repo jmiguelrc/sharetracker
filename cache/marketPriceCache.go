@@ -1,6 +1,10 @@
 package cache
 
-import "github.com/jmiguelrc/sharetracker/api"
+import (
+	"log"
+
+	"github.com/jmiguelrc/sharetracker/api"
+)
 
 var marketTickerPriceCache = make(map[string]api.MarketPrice)
 
@@ -9,7 +13,10 @@ func GetCurrentMarketPrice(ticker string) api.MarketPrice {
 	if val, ok := marketTickerPriceCache[ticker]; ok {
 		return val
 	}
-	val := api.GetCurrentMarketPrice(ticker)
+	val, err := api.GetCurrentMarketPrice(ticker)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 	marketTickerPriceCache[ticker] = val
 	return val
 }
