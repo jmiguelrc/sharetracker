@@ -19,9 +19,11 @@ var gainsTaxRate float64
 var positions []Position
 
 func init() {
-	viper.SetConfigName("portfolio")
-	viper.AddConfigPath("$HOME/.sharetracker")
+	viper.SetConfigName(".sharetracker")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("$HOME/")
 	viper.AddConfigPath(".")
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Fatal error config file: %s", err)
