@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jmiguelrc/sharetracker/cache"
 	"github.com/leekchan/accounting"
@@ -13,6 +14,7 @@ type Position struct {
 	Ticker    string
 	NumShares float64
 	BuyPrice  float64
+	Date      string
 }
 
 var gainsTaxRate float64
@@ -41,10 +43,18 @@ func main() {
 	ytdProfit := 0.0
 
 	for _, position := range positions {
+		buyDate, _ := time.Parse("02-01-2006", position.Date)
+		wasBoughThisYear := buyDate.Year() == time.Now().Year()
+
 		investedValue += position.NumShares * position.BuyPrice
 		marketPrice := cache.GetCurrentMarketPrice(position.Ticker)
 		currentMarketValue += position.NumShares * marketPrice.CurrentPrice
-		ytdProfit += position.NumShares * (marketPrice.CurrentPrice - marketPrice.YearStartPrice)
+
+		ytdPriceReference := marketPrice.YearStartPrice
+		if wasBoughThisYear {
+			ytdPriceReference = position.BuyPrice
+		}
+		ytdProfit += position.NumShares * (marketPrice.CurrentPrice - ytdPriceReference)
 	}
 
 	netProfit := (1 - gainsTaxRate) * (currentMarketValue - investedValue)

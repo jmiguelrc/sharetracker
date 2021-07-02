@@ -28,18 +28,22 @@ positions:
 - ticker: CSSPX.MI
   numShares: 10
   buyPrice: 200.0
+  date: '25-01-2017'
 
 - ticker: IWDA.AS
   numShares: 20
   buyPrice: 43.895
+  date: '15-06-2017'
 
 - ticker: IWDA.AS
   numShares: 20
   buyPrice: 59.35
+  date: '02-01-2019'
 
 - ticker: IWDA.AS
   numShares: 10
   buyPrice: 64.505
+  date: '22-05-2020'
 ```
 
 [Yahoo Finance](https://finance.yahoo.com/) is used to fetch the current market price of each position. Please ensure the `ticker` exists in [Yahoo Finance](https://finance.yahoo.com/).
