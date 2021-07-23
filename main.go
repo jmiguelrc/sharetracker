@@ -3,22 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/jmiguelrc/sharetracker/cache"
+	"github.com/jmiguelrc/sharetracker/positioncalc"
 	"github.com/leekchan/accounting"
 	"github.com/spf13/viper"
 )
 
-type Position struct {
-	Ticker    string
-	NumShares float64
-	BuyPrice  float64
-	Date      string
-}
-
 var gainsTaxRate float64
-var positions []Position
+var positions []positioncalc.Position
 
 func init() {
 	viper.SetConfigName(".sharetracker")
@@ -27,44 +19,28 @@ func init() {
 	viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()
+	fmt.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 	if err != nil {
 		log.Fatalf("Fatal error config file: %s", err)
 	}
 
 	viper.SetDefault("gainsTaxRate", 0.28)
 	gainsTaxRate = viper.GetFloat64("gainsTaxRate")
-	positions = make([]Position, 0)
-	viper.UnmarshalKey("positions", &positions)
+	positions = make([]positioncalc.Position, 0)
+	err = viper.UnmarshalKey("positions", &positions)
+	if err != nil {
+		log.Fatalf("Error reading configured positions %s", err)
+	}
 }
 
 func main() {
-	investedValue := 0.0
-	currentMarketValue := 0.0
-	ytdProfit := 0.0
-
-	for _, position := range positions {
-		buyDate, _ := time.Parse("02-01-2006", position.Date)
-		wasBoughThisYear := buyDate.Year() == time.Now().Year()
-
-		investedValue += position.NumShares * position.BuyPrice
-		marketPrice := cache.GetCurrentMarketPrice(position.Ticker)
-		currentMarketValue += position.NumShares * marketPrice.CurrentPrice
-
-		ytdPriceReference := marketPrice.YearStartPrice
-		if wasBoughThisYear {
-			ytdPriceReference = position.BuyPrice
-		}
-		ytdProfit += position.NumShares * (marketPrice.CurrentPrice - ytdPriceReference)
-	}
-
-	netProfit := (1 - gainsTaxRate) * (currentMarketValue - investedValue)
-	totalNetValue := investedValue + netProfit
+	currentStatus := positioncalc.CalcProfitPositions(positions, gainsTaxRate)
 
 	ac := accounting.Accounting{Symbol: "€", Precision: 2}
-	fmt.Printf("Total buy value:  %s\n", ac.FormatMoney(investedValue))
-	fmt.Printf("Current Value:    %s\n", ac.FormatMoney(currentMarketValue))
-	fmt.Printf("Total Net Value:  %s\n", ac.FormatMoney(totalNetValue))
-	fmt.Printf("Gross Profit:     %s\n", ac.FormatMoney(currentMarketValue-investedValue))
-	fmt.Printf("Net Profit:       %s\n", ac.FormatMoney(netProfit))
-	fmt.Printf("YTD Gross Profit: %s\n", ac.FormatMoney(ytdProfit))
+	fmt.Printf("Total buy value:  %s\n", ac.FormatMoney(currentStatus.TotalBuyValue))
+	fmt.Printf("Current Value:    %s\n", ac.FormatMoney(currentStatus.GrossCurrentValue))
+	fmt.Printf("Total Net Value:  %s\n", ac.FormatMoney(currentStatus.NetCurrentValue))
+	fmt.Printf("Gross Profit:     %s\n", ac.FormatMoney(currentStatus.GrossCurrentValue-currentStatus.TotalBuyValue))
+	fmt.Printf("Net Profit:       %s\n", ac.FormatMoney(currentStatus.NetProfit))
+	fmt.Printf("YTD Gross Profit: %s\n", ac.FormatMoney(currentStatus.YtdGrossProfit))
 }
