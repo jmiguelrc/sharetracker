@@ -16,26 +16,33 @@ type Position struct {
 type CurrentProfit struct {
 	TotalBuyValue     float64
 	GrossCurrentValue float64
-	NetCurrentValue   float64
-	NetProfit         float64
 	YtdGrossProfit    float64
+}
+
+func (p *CurrentProfit) NetCurrentValue(gainsTaxRate float64) float64 {
+	return p.TotalBuyValue + p.NetProfit(gainsTaxRate)
+}
+
+func (p *CurrentProfit) NetProfit(gainsTaxRate float64) float64 {
+	if p.GrossProfit() > 0 {
+		return p.GrossProfit() * (1 - gainsTaxRate)
+	} else {
+		return p.GrossProfit()
+	}
+}
+
+func (p *CurrentProfit) GrossProfit() float64 {
+	return p.GrossCurrentValue - p.TotalBuyValue
 }
 
 func CalcPositionResult(pos Position, gainsTaxRate float64) CurrentProfit {
 	var currentStatus CurrentProfit
 
-	buyDate, _ := time.Parse("02-01-2006", pos.Date)
-	wasBoughThisYear := buyDate.Year() == time.Now().Year()
-
 	currentStatus.TotalBuyValue = pos.NumShares * pos.BuyPrice
 	marketPrice := cache.GetCurrentMarketPrice(pos.Ticker)
 	currentStatus.GrossCurrentValue = pos.NumShares * marketPrice.CurrentPrice
 
-	ytdPriceReference := marketPrice.YearStartPrice
-	if wasBoughThisYear {
-		ytdPriceReference = pos.BuyPrice
-	}
-	currentStatus.YtdGrossProfit = pos.NumShares * (marketPrice.CurrentPrice - ytdPriceReference)
+	currentStatus.YtdGrossProfit = pos.NumShares * (marketPrice.CurrentPrice - getYtdBasePrice(pos, marketPrice.YearStartPrice))
 
 	return currentStatus
 }
@@ -49,8 +56,16 @@ func CalcProfitPositions(positions []Position, gainsTaxRate float64) CurrentProf
 		currentStatus.YtdGrossProfit += positionCurStatus.YtdGrossProfit
 	}
 
-	currentStatus.NetProfit = (1 - gainsTaxRate) * (currentStatus.GrossCurrentValue - currentStatus.TotalBuyValue)
-	currentStatus.NetCurrentValue = currentStatus.TotalBuyValue + currentStatus.NetProfit
-
 	return currentStatus
+}
+
+func getYtdBasePrice(pos Position, yearStartPrice float64) float64 {
+	buyDate, err := time.Parse("02-01-2006", pos.Date)
+
+	wasBoughThisYear := err == nil && buyDate.Year() == time.Now().Year()
+
+	if wasBoughThisYear {
+		return pos.BuyPrice
+	}
+	return yearStartPrice
 }

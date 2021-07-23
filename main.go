@@ -39,8 +39,8 @@ func main() {
 	ac := accounting.Accounting{Symbol: "€", Precision: 2}
 	fmt.Printf("Total buy value:  %s\n", ac.FormatMoney(currentStatus.TotalBuyValue))
 	fmt.Printf("Current Value:    %s\n", ac.FormatMoney(currentStatus.GrossCurrentValue))
-	fmt.Printf("Total Net Value:  %s\n", ac.FormatMoney(currentStatus.NetCurrentValue))
-	fmt.Printf("Gross Profit:     %s\n", ac.FormatMoney(currentStatus.GrossCurrentValue-currentStatus.TotalBuyValue))
-	fmt.Printf("Net Profit:       %s\n", ac.FormatMoney(currentStatus.NetProfit))
+	fmt.Printf("Total Net Value:  %s\n", ac.FormatMoney(currentStatus.NetCurrentValue(gainsTaxRate)))
+	fmt.Printf("Gross Profit:     %s\n", ac.FormatMoney(currentStatus.GrossProfit()))
+	fmt.Printf("Net Profit:       %s\n", ac.FormatMoney(currentStatus.NetProfit(gainsTaxRate)))
 	fmt.Printf("YTD Gross Profit: %s\n", ac.FormatMoney(currentStatus.YtdGrossProfit))
 }
