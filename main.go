@@ -34,7 +34,7 @@ func init() {
 }
 
 func main() {
-	currentStatus := positioncalc.CalcProfitPositions(positions, gainsTaxRate)
+	currentStatus := positioncalc.CalcProfitPositions(positions)
 
 	ac := accounting.Accounting{Symbol: "€", Precision: 2}
 	fmt.Printf("Total buy value:  %s\n", ac.FormatMoney(currentStatus.TotalBuyValue))

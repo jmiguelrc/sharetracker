@@ -35,7 +35,7 @@ func (p *CurrentProfit) GrossProfit() float64 {
 	return p.GrossCurrentValue - p.TotalBuyValue
 }
 
-func CalcPositionResult(pos Position, gainsTaxRate float64) CurrentProfit {
+func CalcPositionResult(pos Position) CurrentProfit {
 	var currentStatus CurrentProfit
 
 	currentStatus.TotalBuyValue = pos.NumShares * pos.BuyPrice
@@ -47,10 +47,10 @@ func CalcPositionResult(pos Position, gainsTaxRate float64) CurrentProfit {
 	return currentStatus
 }
 
-func CalcProfitPositions(positions []Position, gainsTaxRate float64) CurrentProfit {
+func CalcProfitPositions(positions []Position) CurrentProfit {
 	var currentStatus CurrentProfit
 	for _, position := range positions {
-		positionCurStatus := CalcPositionResult(position, gainsTaxRate)
+		positionCurStatus := CalcPositionResult(position)
 		currentStatus.GrossCurrentValue += positionCurStatus.GrossCurrentValue
 		currentStatus.TotalBuyValue += positionCurStatus.TotalBuyValue
 		currentStatus.YtdGrossProfit += positionCurStatus.YtdGrossProfit
